@@ -1,10 +1,3 @@
-Now:
-
-Click inside the code area
-Press Cmd + A to select all the code
-Press Delete to clear it
-Paste the new code below:
-
 import requests
 from bs4 import BeautifulSoup
 import pdfplumber
