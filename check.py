@@ -1,4 +1,11 @@
-mport requests
+Now:
+
+Click inside the code area
+Press Cmd + A to select all the code
+Press Delete to clear it
+Paste the new code below:
+
+import requests
 from bs4 import BeautifulSoup
 import pdfplumber
 import os
@@ -20,7 +27,7 @@ def get_latest_pdf_url():
     for a in soup.find_all("a", href=True):
         href = a["href"]
         if href.lower().endswith(".pdf"):
-            return href  # Return only the FIRST (latest) PDF
+            return href
     return None
 
 def search_pdf(pdf_url):
