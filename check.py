@@ -176,22 +176,51 @@ def pdf_date(url):
     return None
 
 
-def get_pdf_urls():
-    """Every agenda PDF on the page, newest first."""
-    response = fetch(PAGE_URL)
-    soup = BeautifulSoup(response.text, "html.parser")
-
+def _pdf_links(html):
+    """PDF hrefs in the order they appear in this chunk of HTML, de-duped."""
     seen, links = set(), []
-    for a in soup.find_all("a", href=True):
-        href = a["href"]
-        if not href.lower().endswith(".pdf"):
-            continue
+    for href in re.findall(r'href="([^"]+\.pdf)"', html, flags=re.IGNORECASE):
         if not href.startswith("http"):
             href = "https://immigration.gov.ph" + href
-        if href in seen:
-            continue
-        seen.add(href)
-        links.append(href)
+        if href not in seen:
+            seen.add(href)
+            links.append(href)
+    return links
+
+
+def _current_year_section(html):
+    """Slice the page down to the 'Agenda Verification <year>' accordion for the
+    current year, so we only ever read the list that's actually current.
+
+    The page groups agenda PDFs by year in accordion panels (2026, 2025, ...).
+    We target this year's panel and fall back to the newest panel if, for
+    whatever reason, one for this exact year isn't there yet. Falls back to the
+    whole page if the accordion markup ever changes."""
+    titles = list(re.finditer(r"Agenda Verification\s*(20\d{2})", html))
+    if not titles:
+        print("  (no year sections found — scanning the whole page)")
+        return html, None
+
+    year = str(now_ph().year)
+    chosen = next((m for m in titles if m.group(1) == year), None)
+    if chosen is None:
+        # No panel for this year yet; use the newest year present.
+        chosen = max(titles, key=lambda m: m.group(1))
+        print(f"  (no {year} section yet — using newest: {chosen.group(1)})")
+
+    start = chosen.end()
+    later = [m.start() for m in titles if m.start() > start]
+    end = min(later) if later else len(html)
+    return html[start:end], chosen.group(1)
+
+
+def get_pdf_urls():
+    """Agenda PDFs from the current year's section, newest first."""
+    response = fetch(PAGE_URL)
+    section, year = _current_year_section(response.text)
+    links = _pdf_links(section)
+    if year:
+        print(f"  scanning the 'Agenda Verification {year}' section ({len(links)} PDFs)")
 
     floor = dt.date(1900, 1, 1)
     ordered = sorted(
