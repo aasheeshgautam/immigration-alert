@@ -2,8 +2,23 @@ name: Immigration Status Checker
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Runs every hour
-  workflow_dispatch:       # Allows manual trigger
+    # 11:00 AM and 6:00 PM Philippine time (UTC+8) => 03:00 and 10:00 UTC.
+    # GitHub can run scheduled jobs a little late when the queue is busy.
+    - cron: '0 3 * * *'
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      test_message:
+        description: 'Send a Telegram test message instead of checking'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write  # needed to commit state.json
+
+concurrency:
+  group: immigration-check
+  cancel-in-progress: false
 
 jobs:
   check:
@@ -11,10 +26,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -25,4 +40,18 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TEST_MODE: ${{ inputs.test_message }}
+          TARGET_NUMBER: '2026229963'
+          NEAR_FROM: '2026229900'
         run: python check.py
+
+      - name: Persist state
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state.json || exit 0
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: update checker state [skip ci]"
+          git pull --rebase --autostash
+          git push
