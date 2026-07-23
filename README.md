@@ -12,7 +12,11 @@ queue is busy; that's normal and doesn't affect the result.
 
 ## What it does on each run
 
-1. Scrapes every agenda PDF link and sorts by the date in the filename.
+1. Opens the **"VISA APPLICATION STATUS (Agenda Verification &lt;year&gt;)"**
+   accordion for the current year and sorts its PDFs by the date in the
+   filename. Any new list for any month (July, August, … December) is picked up
+   automatically — nothing is pinned to a specific date. At New Year it targets
+   the new year's panel, falling back to the newest panel present.
 2. Downloads the **3 newest** PDFs and extracts every 10-digit application
    number. Scanning more than one means a failed run can't cause a missed list —
    the site times out fairly often.
