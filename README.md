@@ -17,9 +17,12 @@ queue is busy; that's normal and doesn't affect the result.
    filename. Any new list for any month (July, August, … December) is picked up
    automatically — nothing is pinned to a specific date. At New Year it targets
    the new year's panel, falling back to the newest panel present.
-2. Downloads the **3 newest** PDFs and extracts every 10-digit application
-   number. Scanning more than one means a failed run can't cause a missed list —
-   the site times out fairly often.
+2. Downloads **every PDF in that section** (`SCAN_COUNT=0`) and extracts every
+   10-digit application number. Scanning the whole section matters because the
+   lists aren't in strict number order — the target can land on any agenda, so
+   scanning only the newest few risks missing it if several lists publish
+   between runs. Set `SCAN_COUNT` to a positive number to scan only that many
+   newest PDFs instead.
 3. Reacts:
 
 Each situation has its own emoji so it's recognisable at a glance:
@@ -76,4 +79,4 @@ Set as `env:` in `.github/workflows/check.yml`:
 | `NEAR_FROM` | `2026229900` | Bottom of the "getting close" window |
 | `NEAREST_WINDOW` | `10` | Size of the "you're basically next" 🔥 window (the last N numbers before the target) |
 | `CHECKIN_EVERY_DAYS` | `2` | How often the 💓 heartbeat check-in goes out |
-| `SCAN_COUNT` | `3` | How many recent PDFs to scan per run |
+| `SCAN_COUNT` | `0` | How many newest PDFs to scan; `0` = the whole current-year section |

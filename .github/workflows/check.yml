@@ -45,6 +45,7 @@ jobs:
           NEAR_FROM: '2026229900'
           NEAREST_WINDOW: '10'      # last N before target => "you're basically next"
           CHECKIN_EVERY_DAYS: '2'   # heartbeat cadence (was weekly)
+          SCAN_COUNT: '0'           # 0 = scan the whole current-year section (no miss risk)
         run: python check.py
 
       - name: Persist state
