@@ -22,13 +22,16 @@ queue is busy; that's normal and doesn't affect the result.
    the site times out fairly often.
 3. Reacts:
 
-| Situation | What happens |
-| --- | --- |
-| **2026229963 is on the list** | 🎉 Alert — and it repeats **every run** until I reply `stop` in Telegram |
-| **Any number from 2026229900 to 2026229963 appears** | 👀 "They're getting close" alert, once per number |
-| **Nothing new** | Silent, except the Saturday check-in |
-| **Every Saturday** | 📅 Weekly check-in so I know it's still alive and running |
-| **The run fails** | ⚠️ Error message, instead of dying silently in CI |
+Each situation has its own emoji so it's recognisable at a glance:
+
+| Situation | Emoji | What happens |
+| --- | --- | --- |
+| **2026229963 is on the list** | 🎉 | Alert **with a screenshot of my row** (page number + file/date/visa columns), so I can find it in the PDF by hand. Repeats **every run** until I reply `stop` in Telegram (the screenshot is sent once, on the first hit) |
+| **A number within 10 of mine appears** (2026229953–2026229962) | 🔥 | "You're basically next!" alert, stamped with the exact time it turned up, once per number |
+| **Any number from 2026229900 to 2026229952 appears** | 👀 | "They're getting close" alert, once per number |
+| **Nothing new** | 🟢 | Silent, except the check-in |
+| **Every 2 days** | 💓 | Heartbeat check-in so I know it's still alive and running |
+| **The run fails** | ⚠️ | Error message, instead of dying silently in CI |
 
 ## Stopping it
 
@@ -61,7 +64,7 @@ id, and every chat the bot can currently see, then sends a test message.
 
 `state.json` is committed back by the workflow. It remembers which near-window
 numbers were already announced, whether the number was found, whether `stop` was
-received, and which week the last check-in went out — so nothing repeats itself.
+received, and the date the last check-in went out — so nothing repeats itself.
 
 ## Configuration
 
@@ -71,4 +74,6 @@ Set as `env:` in `.github/workflows/check.yml`:
 | --- | --- | --- |
 | `TARGET_NUMBER` | `2026229963` | The number to watch for |
 | `NEAR_FROM` | `2026229900` | Bottom of the "getting close" window |
+| `NEAREST_WINDOW` | `10` | Size of the "you're basically next" 🔥 window (the last N numbers before the target) |
+| `CHECKIN_EVERY_DAYS` | `2` | How often the 💓 heartbeat check-in goes out |
 | `SCAN_COUNT` | `3` | How many recent PDFs to scan per run |

@@ -34,7 +34,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4 pdfplumber
+        run: pip install requests beautifulsoup4 pdfplumber pymupdf
 
       - name: Run checker
         env:
@@ -43,6 +43,8 @@ jobs:
           TEST_MODE: ${{ inputs.test_message }}
           TARGET_NUMBER: '2026229963'
           NEAR_FROM: '2026229900'
+          NEAREST_WINDOW: '10'      # last N before target => "you're basically next"
+          CHECKIN_EVERY_DAYS: '2'   # heartbeat cadence (was weekly)
         run: python check.py
 
       - name: Persist state
