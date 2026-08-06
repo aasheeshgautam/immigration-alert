@@ -35,9 +35,11 @@ CHECKIN_EVERY_DAYS = int(os.environ.get("CHECKIN_EVERY_DAYS", "2"))
 PAGE_URL = "https://immigration.gov.ph/resources/visa-application-status/"
 STATE_FILE = "state.json"
 
-# Scan a few of the newest PDFs, not just one: the site times out often enough
-# that a single failed run could otherwise make us miss a list entirely.
-SCAN_COUNT = int(os.environ.get("SCAN_COUNT", "3"))
+# How many of the newest PDFs to scan each run. 0 (or negative) means scan the
+# WHOLE current-year section — the safest setting: the immigration lists aren't
+# in strict number order, so the target can land on any agenda, and scanning
+# only the newest few risks missing it if several lists publish between runs.
+SCAN_COUNT = int(os.environ.get("SCAN_COUNT", "0"))
 TEST_MODE = os.environ.get("TEST_MODE", "").lower() in ("1", "true", "yes")
 
 # ------------------------------------------------------------------- emoji legend
@@ -443,8 +445,9 @@ def run():
     if not pdf_urls:
         raise RuntimeError("No PDF links found on the page — layout may have changed.")
 
-    recent = pdf_urls[:SCAN_COUNT]
-    print(f"Found {len(pdf_urls)} PDFs. Scanning newest {len(recent)}:")
+    recent = pdf_urls if SCAN_COUNT <= 0 else pdf_urls[:SCAN_COUNT]
+    scope = "all" if SCAN_COUNT <= 0 else f"newest {len(recent)}"
+    print(f"Found {len(pdf_urls)} PDFs. Scanning {scope}:")
     for u in recent:
         print(f"  - {u} ({pdf_date(u)})")
 
