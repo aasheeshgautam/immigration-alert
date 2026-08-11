@@ -6,9 +6,10 @@ published agenda PDF.
 
 ## Schedule
 
-Runs twice a day — **11:00 AM** and **6:00 PM** Philippine time (`0 3 * * *` and
-`0 10 * * *` UTC). GitHub sometimes starts scheduled jobs a little late when its
-queue is busy; that's normal and doesn't affect the result.
+Runs three times a day — **11:00 AM**, **6:00 PM** and **8:00 PM** Philippine
+time (`0 3`, `0 10` and `0 12 * * *` UTC). GitHub sometimes starts scheduled
+jobs a little late when its queue is busy; that's normal and doesn't affect the
+result.
 
 ## What it does on each run
 
@@ -34,7 +35,9 @@ Each situation has its own emoji so it's recognisable at a glance:
 | **Any number from 2026229900 to 2026229952 appears** | 👀 | "They're getting close" alert, once per number |
 | **Nothing new** | 🟢 | Silent, except the check-in |
 | **Every 2 days** | 💓 | Heartbeat check-in so I know it's still alive and running |
-| **The run fails** | ⚠️ | Error message, instead of dying silently in CI |
+| **The site is briefly unreachable** | — | Stays quiet and retries next run — `immigration.gov.ph` blips out constantly. No alert, no red run for a one-off outage |
+| **The site is down `SITE_FAIL_ALERT_AFTER` runs in a row** | ⚠️ | "Site looks down" alert (once), then a 🟢 "Back online" when it recovers |
+| **A real error** (page layout changed, a bug) | ⚠️ | Immediate error message, instead of dying silently in CI |
 
 ## Stopping it
 
@@ -80,3 +83,4 @@ Set as `env:` in `.github/workflows/check.yml`:
 | `NEAREST_WINDOW` | `10` | Size of the "you're basically next" 🔥 window (the last N numbers before the target) |
 | `CHECKIN_EVERY_DAYS` | `2` | How often the 💓 heartbeat check-in goes out |
 | `SCAN_COUNT` | `0` | How many newest PDFs to scan; `0` = the whole current-year section |
+| `SITE_FAIL_ALERT_AFTER` | `2` | Consecutive unreachable runs before a ⚠️ outage alert (blips below this stay silent) |

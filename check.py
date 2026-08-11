@@ -31,6 +31,10 @@ NEAR_FROM = os.environ.get("NEAR_FROM", "2026229900")
 NEAREST_WINDOW = int(os.environ.get("NEAREST_WINDOW", "10"))
 # Heartbeat check-in cadence, in days (was weekly; now every 2 days).
 CHECKIN_EVERY_DAYS = int(os.environ.get("CHECKIN_EVERY_DAYS", "2"))
+# immigration.gov.ph goes down for minutes at a time and recovers on its own.
+# Don't cry wolf on every blip: only send the ⚠️ alert once the site has been
+# unreachable this many runs in a row. A lone transient outage stays quiet.
+SITE_FAIL_ALERT_AFTER = int(os.environ.get("SITE_FAIL_ALERT_AFTER", "2"))
 
 PAGE_URL = "https://immigration.gov.ph/resources/visa-application-status/"
 STATE_FILE = "state.json"
@@ -445,6 +449,19 @@ def run():
     if not pdf_urls:
         raise RuntimeError("No PDF links found on the page — layout may have changed.")
 
+    # Reached the site: clear any outage streak, and if we'd previously alerted
+    # about a sustained outage, tell you it's back.
+    if state.get("site_fail_streak", 0) >= SITE_FAIL_ALERT_AFTER:
+        try:
+            send_telegram(
+                f"{E_RUNNING} <b>Back online</b>\n\n"
+                f"The immigration site is reachable again and I've resumed checking. "
+                f"\U0001F44D\n\U0001F552 {stamp()}"
+            )
+        except Exception as exc:  # noqa: BLE001 - recovery notice is best-effort
+            print(f"  could not send recovery notice: {exc}")
+    state["site_fail_streak"] = 0
+
     recent = pdf_urls if SCAN_COUNT <= 0 else pdf_urls[:SCAN_COUNT]
     scope = "all" if SCAN_COUNT <= 0 else f"newest {len(recent)}"
     print(f"Found {len(pdf_urls)} PDFs. Scanning {scope}:")
@@ -618,7 +635,39 @@ def main():
 
     try:
         run()
-    except Exception as exc:  # noqa: BLE001 - surface failures instead of dying silently
+    except requests.exceptions.RequestException as exc:
+        # The site is unreachable (timeout / connection error). It blips out for
+        # minutes and recovers on its own, so a single failure isn't worth an
+        # alert. Count consecutive failures in state.json and only cry wolf once
+        # the outage is sustained. A lone blip stays quiet and exits green — no
+        # ⚠️ ping, no GitHub failure email.
+        print(f"SITE UNREACHABLE: {exc}")
+        state = load_state()
+        streak = state.get("site_fail_streak", 0) + 1
+        state["site_fail_streak"] = streak
+        state["last_site_fail"] = now_ph().isoformat()
+        save_state(state)
+
+        if streak == SITE_FAIL_ALERT_AFTER:
+            # Cross the threshold exactly once — don't re-ping every run after.
+            try:
+                send_telegram(
+                    f"{E_ERROR} <b>Immigration site looks down</b>\n\n"
+                    f"I haven't been able to reach it for {streak} checks in a row. "
+                    f"This is usually the site being flaky, not your application — "
+                    f"I'll keep trying and tell you the moment it's back. \U0001F501\n"  # 🔁
+                    f"\U0001F552 {stamp()}"  # 🕒
+                )
+            except Exception as send_exc:  # noqa: BLE001
+                print(f"Could not send outage alert: {send_exc}")
+        else:
+            print(f"Transient outage (streak {streak}/{SITE_FAIL_ALERT_AFTER}); "
+                  f"staying quiet.")
+        # Exit clean for a transient blip so it doesn't show red / email you.
+        # Once it's a confirmed sustained outage, let the run go red too.
+        sys.exit(1 if streak >= SITE_FAIL_ALERT_AFTER else 0)
+
+    except Exception as exc:  # noqa: BLE001 - a real error (bug, layout change): surface it now
         print(f"ERROR: {exc}")
         try:
             # Escape the exception text: it often contains <...> (e.g. a urllib
