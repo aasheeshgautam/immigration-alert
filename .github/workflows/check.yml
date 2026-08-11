@@ -2,10 +2,11 @@ name: Immigration Status Checker
 
 on:
   schedule:
-    # 11:00 AM and 6:00 PM Philippine time (UTC+8) => 03:00 and 10:00 UTC.
-    # GitHub can run scheduled jobs a little late when the queue is busy.
+    # 11:00 AM, 6:00 PM and 8:00 PM Philippine time (UTC+8) => 03:00, 10:00 and
+    # 12:00 UTC. GitHub can run scheduled jobs a little late when the queue is busy.
     - cron: '0 3 * * *'
     - cron: '0 10 * * *'
+    - cron: '0 12 * * *'
   workflow_dispatch:
     inputs:
       test_message:
@@ -46,6 +47,7 @@ jobs:
           NEAREST_WINDOW: '10'      # last N before target => "you're basically next"
           CHECKIN_EVERY_DAYS: '2'   # heartbeat cadence (was weekly)
           SCAN_COUNT: '0'           # 0 = scan the whole current-year section (no miss risk)
+          SITE_FAIL_ALERT_AFTER: '2'  # only alert after the site is down this many runs in a row
         run: python check.py
 
       - name: Persist state
