@@ -1,7 +1,7 @@
 {
   "highest_seen": "2026249812",
-  "last_checkin": "2026-08-10",
-  "last_run": "2026-08-11T14:16:25.713124+08:00",
+  "last_checkin": "2026-08-12",
+  "last_run": "2026-08-12T16:17:11.852181+08:00",
   "last_scanned": [
     "https://immigration.gov.ph/wp-content/uploads/2026/08/2026Jul29_agenda.pdf",
     "https://immigration.gov.ph/wp-content/uploads/2026/07/2026Jul07_agenda.pdf",
@@ -20,5 +20,6 @@
   "near_alerted": [
     "2026229907"
   ],
+  "site_fail_streak": 0,
   "tg_offset": 0
 }
