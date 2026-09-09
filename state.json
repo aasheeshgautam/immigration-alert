@@ -18,12 +18,12 @@
     "https://immigration.gov.ph/wp-content/uploads/2026/02/2026Jan29_agenda.pdf",
     "https://immigration.gov.ph/wp-content/uploads/2026/01/2026jan13_agenda.pdf"
   ],
-  "last_site_fail": "2026-09-08T22:17:08.855473+08:00",
+  "last_site_fail": "2026-09-10T00:38:18.235553+08:00",
   "last_weekly": "2026-W31",
   "near_alerted": [
     "2026229907",
     "2026229919"
   ],
-  "site_fail_streak": 0,
+  "site_fail_streak": 1,
   "tg_offset": 0
 }
