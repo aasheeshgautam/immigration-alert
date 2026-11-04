@@ -15,5 +15,7 @@
     "2026229919"
   ],
   "site_fail_streak": 0,
-  "tg_offset": 780919162
+  "stopped": true,
+  "stopped_at": "2026-11-04T18:37:40.691741+08:00",
+  "tg_offset": 780919163
 }
